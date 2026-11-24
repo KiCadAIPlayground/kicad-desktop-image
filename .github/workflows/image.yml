@@ -1,4 +1,4 @@
-# Builds ghcr.io/kicadaiplayground/kicad-desktop:<kicad tag>-krt<short sha> on push to main or by hand.
+# Builds ghcr.io/kicadaiplayground/kicad-desktop:<kicad tag>-krt<krt version> on push to main or by hand.
 name: image
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
       - id: v
         run: |
           kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
-          krt=$(grep -oP '^ARG KRT_SHA=\K.{7}' Dockerfile)
+          krt=$(grep -oP '^ARG KRT_VERSION=\K.*' Dockerfile)
           echo "tag=${kicad}-krt${krt}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@v4.4.1
       - uses: docker/login-action@v4.8.0
