@@ -1,4 +1,6 @@
-"""krt-mcp: a small MCP server that exposes KiCadRoutingTools (KRT) to remote agents.
+"""krt-mcp: a small MCP server (suites "krt" and "happy") that exposes PCB tools to remote agents.
+
+Suite krt = KiCadRoutingTools, suite happy = kicad-happy (the scripts of its skills).
 
 Runs from the kicad-desktop image with a different command than the desktop itself
 (`/opt/krt-mcp/venv/bin/python /opt/krt-mcp/server.py`), as its own Deployment that mounts the KiCad home volume
@@ -9,34 +11,44 @@ Every /mcp request needs `Authorization: Bearer $KRT_MCP_TOKEN`; the server refu
 Environment:
   KRT_MCP_TOKEN   shared secret (required)
   KRT_ROOT        KiCadRoutingTools clone   (default /opt/kicad-plugins/KiCadRoutingTools)
+  KH_ROOT         kicad-happy clone         (default /opt/kicad-happy)
   KRT_WORKSPACE   the only tree the tools may read or write (default /config/projects)
 
 Safety model: tools run only by registry name (never a path from the caller), without a shell, with cwd inside the
 workspace, and every path-looking argument must resolve inside the workspace (symlinks included). One run at a time.
 
-`python3 server.py --selftest` checks the path guard and that the registry lists tools (needs no token).
+`python3 server.py --selftest` checks the path guard and that both registries list tools (needs no token).
 """
+import ast
 import asyncio
 import base64
 import hmac
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 import time
 from pathlib import Path
 
 from mcp.server.mcpserver import MCPServer
 
 ROOT = Path(os.environ.get("KRT_ROOT", "/opt/kicad-plugins/KiCadRoutingTools"))
+KH_ROOT = Path(os.environ.get("KH_ROOT", "/opt/kicad-happy"))
 WORKSPACE = Path(os.environ.get("KRT_WORKSPACE", "/config/projects"))
 MAX_FILE = 50 * 1024 * 1024
 TAIL = 20000
 PATH_EXTS = (".kicad_pcb", ".kicad_pro", ".kicad_sch", ".kicad_prl", ".kicad_dru", ".json", ".txt", ".csv", ".png",
              ".svg", ".gif", ".mp4", ".zip", ".md", ".yaml", ".yml")
 
-mcp = MCPServer("krt-mcp")
+INSTRUCTIONS = (
+    "PCB tools in two suites: `krt` (KiCadRoutingTools: placement and routing) and `happy` (kicad-happy: schematic/PCB "
+    "analysis, EMC, SPICE, datasheets, BOM). The kicad-happy skills' SKILL.md files describe how to use these scripts: "
+    "call skill_doc, then tool_help first. Tools run on projects (git repos) under the workspace; use project_pull "
+    "before and project_publish after.")
+mcp = MCPServer("krt-mcp", instructions=INSTRUCTIONS)
 _lock = asyncio.Lock()
 
 
@@ -60,7 +72,48 @@ def check_arg(cwd, a):
         guard(cwd / v)
 
 
-def _registry(door=None):
+_happy_cache = None
+
+
+def _first_doc_line(f):
+    try:
+        doc = ast.get_docstring(ast.parse(Path(f).read_text(encoding="utf-8", errors="replace"))) or ""
+    except SyntaxError:
+        doc = ""
+    return doc.strip().splitlines()[0] if doc.strip() else ""
+
+
+def _happy_registry():
+    """Runnable top-level skills/*/scripts/*.py (answers --help with usage), computed once and cached."""
+    global _happy_cache
+    if _happy_cache is None:
+        files = sorted(f for f in KH_ROOT.glob("skills/*/scripts/*.py") if not f.name.startswith(("_", "test_")))
+
+        def probe(f):
+            try:
+                r = subprocess.run([sys.executable, "-X", "utf8", str(f), "--help"], capture_output=True, text=True,
+                                   timeout=20, stdin=subprocess.DEVNULL, cwd=KH_ROOT)
+            except subprocess.TimeoutExpired:
+                return None
+            if r.returncode or "usage" not in (r.stdout + r.stderr).lower():
+                return None
+            return {"path": f"{f.parent.parent.name}/{f.name}", "purpose": _first_doc_line(f),
+                    "scope": [f.parent.parent.name], "kind": "script", "file": str(f.relative_to(KH_ROOT))}
+        with ThreadPoolExecutor(8) as ex:
+            _happy_cache = [t for t in ex.map(probe, files) if t]
+    return _happy_cache
+
+
+def _suite(suite):
+    if suite not in ("krt", "happy"):
+        raise ValueError("suite must be 'krt' or 'happy'")
+    return ROOT if suite == "krt" else KH_ROOT
+
+
+def _registry(suite="krt", door=None):
+    _suite(suite)
+    if suite == "happy":
+        return _happy_registry()
     cmd = [sys.executable, "-X", "utf8", str(ROOT / "krt_registry.py"), "--json", "--root", str(ROOT)]
     if door:
         cmd += ["--door", door]
@@ -70,12 +123,13 @@ def _registry(door=None):
     return json.loads(r.stdout)["tools"]
 
 
-def _tool_file(name):
-    """Registry entry's script path; the name must be a registry path or its basename."""
-    hits = [t for t in _registry() if t["path"] == name or Path(t["path"]).name in (name, name + ".py")]
+def _tool_file(suite, name):
+    """Registry entry's script path; the name must be a registry path or (krt) its basename."""
+    hits = [t for t in _registry(suite) if t["path"] == name or
+            (suite == "krt" and Path(t["path"]).name in (name, name + ".py"))]
     if len(hits) != 1:
         raise ValueError(f"unknown or ambiguous tool {name!r}: {[t['path'] for t in hits] or 'use list_tools'}")
-    return guard(ROOT / hits[0]["path"], ROOT)
+    return guard(_suite(suite) / hits[0].get("file", hits[0]["path"]), _suite(suite))
 
 
 def _project(project):
@@ -86,18 +140,30 @@ def _project(project):
 
 
 @mcp.tool()
-def list_tools(door: str | None = None) -> list[dict]:
-    """KRT tools (name, purpose, scope, kind); door is placement, routing or combined."""
+def list_tools(suite: str = "krt", door: str | None = None) -> list[dict]:
+    """Tools of a suite ('krt' or 'happy') as name, purpose, scope, kind; door (krt only): placement, routing, combined."""
     return [{"name": t["path"], "purpose": t["purpose"], "scope": t["scope"], "kind": t["kind"]}
-            for t in _registry(door)]
+            for t in _registry(suite, door)]
 
 
 @mcp.tool()
-def tool_help(tool: str) -> str:
+def tool_help(suite: str, tool: str) -> str:
     """The --help text of a registry tool (name as given by list_tools)."""
-    r = subprocess.run([sys.executable, "-X", "utf8", str(_tool_file(tool)), "--help"],
-                       capture_output=True, text=True, timeout=60, cwd=ROOT)
+    r = subprocess.run([sys.executable, "-X", "utf8", str(_tool_file(suite, tool)), "--help"],
+                       capture_output=True, text=True, timeout=60, cwd=_suite(suite))
     return r.stdout + r.stderr
+
+
+@mcp.tool()
+def skill_doc(skill: str, suite: str = "happy") -> str:
+    """SKILL.md of a skill (happy: skills/<skill>; krt: .claude/skills/<skill>): how to use its scripts."""
+    if not re.fullmatch(r"[a-z0-9-]+", skill):
+        raise ValueError("invalid skill name")
+    root = _suite(suite)
+    f = root / ("skills" if suite == "happy" else ".claude/skills") / skill / "SKILL.md"
+    if not f.is_file():
+        raise ValueError(f"no such skill: {skill}")
+    return f.read_text(encoding="utf-8", errors="replace")
 
 
 def _snapshot(d):
@@ -105,9 +171,9 @@ def _snapshot(d):
 
 
 @mcp.tool()
-async def run_tool(tool: str, args: list[str], project: str, timeout_s: int = 900) -> dict:
-    """Run a registry tool with args in WORKSPACE/<project>. Path-like args must stay inside the workspace."""
-    script, cwd = _tool_file(tool), _project(project)
+async def run_tool(suite: str, tool: str, args: list[str], project: str, timeout_s: int = 900) -> dict:
+    """Run a tool of a suite (krt or happy) with args in WORKSPACE/<project>. Path-like args must stay inside the workspace."""
+    script, cwd = _tool_file(suite, tool), _project(project)
     for a in args:
         check_arg(cwd, a)
     if _lock.locked():
@@ -295,10 +361,12 @@ def selftest():
             except ValueError:
                 good = False
             assert good == ok, f"guard({path}) expected {'allow' if ok else 'reject'}"
-    tools = list_tools()
-    assert tools, "registry returned no tools"
-    assert "usage" in tool_help(tools[0]["name"]).lower() or tool_help(tools[0]["name"]), "tool_help empty"
-    print(f"selftest ok: {len(tools)} tools")
+    tools, happy = list_tools(), list_tools("happy")
+    assert tools, "krt registry returned no tools"
+    assert happy, "happy registry returned no tools"
+    assert "usage" in tool_help("happy", happy[0]["name"]).lower(), "tool_help empty"
+    assert "name:" in skill_doc("kicad"), "skill_doc empty"
+    print(f"selftest ok: {len(tools)} krt tools, {len(happy)} happy tools")
 
 
 if __name__ == "__main__":
@@ -309,6 +377,7 @@ if __name__ == "__main__":
     if not token:
         sys.exit("KRT_MCP_TOKEN is empty: refusing to start")
     import uvicorn
+    _happy_registry()  # probe once at startup
     app = mcp.streamable_http_app(streamable_http_path="/mcp", stateless_http=True, host="0.0.0.0",
                                   max_request_body_size=2 * MAX_FILE)  # upload_file: 50 MB as base64
     uvicorn.run(BearerAuth(app, token), host="0.0.0.0", port=3335, log_level="info")

@@ -39,9 +39,18 @@ RUN apk add --no-cache nodejs npm \
  && printf 'export DISABLE_AUTOUPDATER=1\n' > /etc/profile.d/claude.sh
 ENV DISABLE_AUTOUPDATER=1
 COPY claude-me /usr/local/bin/claude-me
-RUN chmod 755 /usr/local/bin/claude-me && claude --version && claude-me --help
+RUN chmod 755 /usr/local/bin/claude-me && claude --version && claude --help | grep -e --plugin-dir && claude --help | grep -e --add-dir \
+ && claude-me --help && { claude-me </dev/null >/dev/null 2>&1; [ $? = 2 ]; }
 # smoke test: the router extension and kikit load in KiCad's Python
 RUN cd /opt/kicad-plugins/KiCadRoutingTools/rust_router && python3 -c "import grid_router; print('grid_router ok')" && python3 -c "import kikit; print('kikit ok')"
+
+# kicad-happy: review/analysis skills and scripts (also loaded by claude-me as a plugin). Deps are stdlib plus
+# optional jsonschema/yaml (apk); ngspice and poppler-utils are the SPICE and PDF-text backends.
+ARG KH_SHA=6b9767e19979cdef91631573753b1547efdbeab9
+RUN apk add --no-cache ngspice poppler-utils py3-jsonschema py3-yaml \
+ && git clone https://github.com/KiCadAIPlayground/kicad-happy.git /opt/kicad-happy \
+ && git -C /opt/kicad-happy checkout "${KH_SHA}" && rm -rf /opt/kicad-happy/.git \
+ && python3 /opt/kicad-happy/skills/kicad/scripts/analyze_schematic.py --help | head -3
 
 # krt-mcp: MCP server over KiCadRoutingTools, same image, different command (see krt-mcp/server.py).
 # The venv sees the apk numpy/scipy/shapely; `mcp`, uvicorn and their dependencies are all pinned exactly.
@@ -53,5 +62,5 @@ RUN python3 -m venv --system-site-packages /opt/krt-mcp/venv \
     rpds-py==2026.9.1 sse-starlette==3.7.1 starlette==1.10.0 truststore==0.10.5 typing-extensions==4.16.0 \
     typing-inspection==0.4.5
 COPY krt-mcp/server.py /opt/krt-mcp/server.py
-RUN KRT_ROOT=/opt/kicad-plugins/KiCadRoutingTools /opt/krt-mcp/venv/bin/python /opt/krt-mcp/server.py --selftest
+RUN KRT_ROOT=/opt/kicad-plugins/KiCadRoutingTools KH_ROOT=/opt/kicad-happy /opt/krt-mcp/venv/bin/python /opt/krt-mcp/server.py --selftest
 # run: KRT_MCP_TOKEN=... /opt/krt-mcp/venv/bin/python /opt/krt-mcp/server.py   (listens on 0.0.0.0:3335)

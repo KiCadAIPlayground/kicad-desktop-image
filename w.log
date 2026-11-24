@@ -8,28 +8,26 @@ hint: if you need to wait for the checks of this pull request to finish before c
   - Event subscriptions are in preview and may not be enabled for your account.
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch less than a minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
-  ✓ Run docker/setup-buildx-action@v4.4.1
-  ✓ Run docker/login-action@v4.8.0
+  * Run docker/setup-buildx-action@v4.4.1
+  * Run docker/login-action@v4.8.0
   * Run docker/build-push-action@v7.4.0
-  * Post Run docker/build-push-action@v7.4.0
-  * Post Run docker/login-action@v4.8.0
   * Post Run docker/setup-buildx-action@v4.4.1
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch less than a minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -42,11 +40,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch less than a minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -59,11 +57,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch less than a minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -76,11 +74,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch less than a minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -93,11 +91,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch less than a minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -110,11 +108,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch less than a minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -127,11 +125,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch less than a minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -144,11 +142,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch less than a minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -161,11 +159,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch less than a minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -178,11 +176,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -195,11 +193,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -212,11 +210,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -229,11 +227,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -246,11 +244,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -263,11 +261,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -280,11 +278,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -297,11 +295,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -314,11 +312,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -331,11 +329,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -348,11 +346,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -365,11 +363,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 1 minute ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -382,11 +380,11 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 2 minutes ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
@@ -399,56 +397,511 @@ JOBS
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 2 minutes ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
   ✓ Run docker/setup-buildx-action@v4.4.1
   ✓ Run docker/login-action@v4.8.0
-  X Run docker/build-push-action@v7.4.0
+  * Run docker/build-push-action@v7.4.0
   * Post Run docker/build-push-action@v7.4.0
   * Post Run docker/login-action@v4.8.0
   * Post Run docker/setup-buildx-action@v4.4.1
   * Post Run actions/checkout@v7.0.1
 Refreshing run status every 3 seconds. Press Ctrl+C to quit.
 
-* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
 Triggered via workflow_dispatch about 2 minutes ago
 
 JOBS
-* build (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
   ✓ Run docker/setup-buildx-action@v4.4.1
   ✓ Run docker/login-action@v4.8.0
-  X Run docker/build-push-action@v7.4.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 2 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 2 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 2 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 2 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 2 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 2 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 2 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 2 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 2 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 2 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 4 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  * Run docker/build-push-action@v7.4.0
+  * Post Run docker/build-push-action@v7.4.0
+  * Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 4 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  ✓ Run docker/build-push-action@v7.4.0
   ✓ Post Run docker/build-push-action@v7.4.0
   ✓ Post Run docker/login-action@v4.8.0
   * Post Run docker/setup-buildx-action@v4.4.1
   * Post Run actions/checkout@v7.0.1
-X krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402347775
-Triggered via workflow_dispatch about 2 minutes ago
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 4 minutes ago
 
 JOBS
-X build in 2m10s (ID 138473966428)
+* build (ID 138475628559)
   ✓ Set up job
   ✓ Run actions/checkout@v7.0.1
   ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
   ✓ Run docker/setup-buildx-action@v4.4.1
   ✓ Run docker/login-action@v4.8.0
-  X Run docker/build-push-action@v7.4.0
+  ✓ Run docker/build-push-action@v7.4.0
+  ✓ Post Run docker/build-push-action@v7.4.0
+  ✓ Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 4 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  ✓ Run docker/build-push-action@v7.4.0
+  ✓ Post Run docker/build-push-action@v7.4.0
+  ✓ Post Run docker/login-action@v4.8.0
+  * Post Run docker/setup-buildx-action@v4.4.1
+  * Post Run actions/checkout@v7.0.1
+Refreshing run status every 3 seconds. Press Ctrl+C to quit.
+
+* krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 4 minutes ago
+
+JOBS
+* build (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  ✓ Run docker/build-push-action@v7.4.0
   ✓ Post Run docker/build-push-action@v7.4.0
   ✓ Post Run docker/login-action@v4.8.0
   ✓ Post Run docker/setup-buildx-action@v4.4.1
   ✓ Post Run actions/checkout@v7.0.1
   ✓ Complete job
+✓ krt-0.24.2-mcp image KiCadAIPlayground/kicad-desktop-image#1 · 45402833857
+Triggered via workflow_dispatch about 4 minutes ago
 
-ANNOTATIONS
-X buildx failed with: failed to build: failed to solve: process "/bin/sh -c KRT_ROOT=/opt/kicad-plugins/KiCadRoutingTools /opt/krt-mcp/venv/bin/python /opt/krt-mcp/server.py --selftest" did not complete successfully: exit code: 1
-build: .github#789
-
+JOBS
+✓ build in 4m15s (ID 138475628559)
+  ✓ Set up job
+  ✓ Run actions/checkout@v7.0.1
+  ✓ Run kicad=$(grep -oP '^ARG KICAD_IMAGE=.*:\K.*' Dockerfile)
+  ✓ Run docker/setup-buildx-action@v4.4.1
+  ✓ Run docker/login-action@v4.8.0
+  ✓ Run docker/build-push-action@v7.4.0
+  ✓ Post Run docker/build-push-action@v7.4.0
+  ✓ Post Run docker/login-action@v4.8.0
+  ✓ Post Run docker/setup-buildx-action@v4.4.1
+  ✓ Post Run actions/checkout@v7.0.1
+  ✓ Complete job
