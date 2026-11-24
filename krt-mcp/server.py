@@ -323,8 +323,10 @@ class BearerAuth:
         self.app, self.token = app, token.encode()
 
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http":
+        if scope["type"] == "lifespan":
             return await self.app(scope, receive, send)
+        if scope["type"] != "http":  # no websockets: the MCP app only speaks HTTP
+            return
         if scope["path"] == "/healthz" and scope["method"] == "GET":
             status, body = 200, b"ok"
         else:
