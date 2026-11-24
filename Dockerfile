@@ -25,13 +25,23 @@ FROM ${KICAD_IMAGE}
 # KiCad's Python is the system python (pip is externally managed): the plugin's deps come from Alpine packages
 RUN apk add --no-cache py3-numpy py3-scipy py3-shapely py3-pillow git openssh-client
 COPY --from=krt-build /src /opt/kicad-plugins/KiCadRoutingTools
-# smoke test: the router extension loads in KiCad's Python
-RUN cd /opt/kicad-plugins/KiCadRoutingTools/rust_router && python3 -c "import grid_router; print('grid_router ok')"
+# KiKit backend for the KiKit PCM plugin (com.github.yaqwsx.kikit), into KiCad's system Python. numpy and shapely
+# come from apk above, so pip leaves them alone; the rest is pinned to what kikit 1.8.1 resolves to.
+RUN pip install --no-cache-dir --break-system-packages kikit==1.8.1 click==8.5.1 commentjson==0.9.0 euclid3==0.1 \
+ lark-parser==0.7.8 markdown2==2.5.5 ply==3.11 prettytable==0.7.2 pybars3==0.9.7 PyMeta3==0.5.1 pypng==0.0.19 \
+ solidpython==1.1.3
+# smoke test: the router extension and kikit load in KiCad's Python
+RUN cd /opt/kicad-plugins/KiCadRoutingTools/rust_router && python3 -c "import grid_router; print('grid_router ok')" && python3 -c "import kikit; print('kikit ok')"
 
 # krt-mcp: MCP server over KiCadRoutingTools, same image, different command (see krt-mcp/server.py).
-# The venv sees the apk numpy/scipy/shapely; `mcp` is pinned to the last 1.x because 2.x dropped mcp.server.fastmcp.
+# The venv sees the apk numpy/scipy/shapely; `mcp`, uvicorn and their dependencies are all pinned exactly.
 RUN python3 -m venv --system-site-packages /opt/krt-mcp/venv \
- && /opt/krt-mcp/venv/bin/pip install --no-cache-dir mcp==1.30.0 uvicorn
+ && /opt/krt-mcp/venv/bin/pip install --no-cache-dir mcp==2.3.0 uvicorn==0.54.0 \
+    annotated-types==0.8.0 anyio==4.16.0 attrs==26.1.0 click==8.5.1 h11==0.16.0 httpcore2==2.16.2 httpx2==2.16.2 \
+    idna==3.20 jsonschema==4.26.0 jsonschema-specifications==2025.9.1 mcp-types==2.3.0 opentelemetry-api==1.45.2 \
+    pydantic==2.14.4 pydantic-core==2.50.5 pyjwt==2.15.1 python-multipart==0.0.34 referencing==0.37.0 \
+    rpds-py==2026.9.1 sse-starlette==3.7.1 starlette==1.10.0 truststore==0.10.5 typing-extensions==4.16.0 \
+    typing-inspection==0.4.5
 COPY krt-mcp/server.py /opt/krt-mcp/server.py
 RUN KRT_ROOT=/opt/kicad-plugins/KiCadRoutingTools /opt/krt-mcp/venv/bin/python /opt/krt-mcp/server.py --selftest
 # run: KRT_MCP_TOKEN=... /opt/krt-mcp/venv/bin/python /opt/krt-mcp/server.py   (listens on 0.0.0.0:3335)

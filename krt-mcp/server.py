@@ -27,18 +27,16 @@ import tempfile
 import time
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 ROOT = Path(os.environ.get("KRT_ROOT", "/opt/kicad-plugins/KiCadRoutingTools"))
 WORKSPACE = Path(os.environ.get("KRT_WORKSPACE", "/config/projects"))
 MAX_FILE = 50 * 1024 * 1024
 TAIL = 20000
-PATH_EXTS = (".kicad_pcb", ".kicad_pro", ".kicad_sch", ".json", ".txt", ".csv")
+PATH_EXTS = (".kicad_pcb", ".kicad_pro", ".kicad_sch", ".kicad_prl", ".kicad_dru", ".json", ".txt", ".csv", ".png",
+             ".svg", ".gif", ".mp4", ".zip", ".md", ".yaml", ".yml")
 
-mcp = FastMCP(
-    "krt-mcp", host="0.0.0.0", port=3335, stateless_http=True, streamable_http_path="/mcp",
-    max_request_body_size=2 * MAX_FILE,  # upload_file carries up to 50 MB as base64
-)
+mcp = MCPServer("krt-mcp")
 _lock = asyncio.Lock()
 
 
@@ -49,6 +47,17 @@ def guard(path, base=None):
     if p != base and base not in p.parents:
         raise ValueError(f"path escapes the workspace: {path}")
     return p
+
+
+def check_arg(cwd, a):
+    """Reject a tool argument that is (or, as --flag=value, carries) a path outside the workspace.
+    A path is: contains a '..' segment (always rejected), ends in a known file extension, or exists relative to cwd.
+    Plain values such as /GND or F.Cu are left alone."""
+    v = a.split("=", 1)[1] if a.startswith("-") and "=" in a else a
+    if ".." in v.split("/"):
+        raise ValueError(f"'..' in argument: {a}")
+    if v.lower().endswith(PATH_EXTS) or (cwd / v).exists():
+        guard(cwd / v)
 
 
 def _registry(door=None):
@@ -100,9 +109,7 @@ async def run_tool(tool: str, args: list[str], project: str, timeout_s: int = 90
     """Run a registry tool with args in WORKSPACE/<project>. Path-like args must stay inside the workspace."""
     script, cwd = _tool_file(tool), _project(project)
     for a in args:
-        v = a.split("=", 1)[1] if a.startswith("-") and "=" in a else a
-        if "/" in v or v.lower().endswith(PATH_EXTS):
-            guard(cwd / v)
+        check_arg(cwd, a)
     if _lock.locked():
         return {"error": "busy: another run is in progress"}
     async with _lock:
@@ -270,6 +277,14 @@ def selftest():
     with tempfile.TemporaryDirectory() as t, tempfile.TemporaryDirectory() as outside:
         WORKSPACE = Path(t)
         (WORKSPACE / "p").mkdir()
+        for ok, a in [(True, "/GND"), (True, "F.Cu"), (True, "board.kicad_pcb"), (True, "--out=out.png"),
+                      (False, "--out=/tmp/x.png"), (False, "../x"), (False, "/etc/passwd"), (False, "--in=a/../b")]:
+            try:
+                check_arg(WORKSPACE / "p", a)
+                good = True
+            except ValueError:
+                good = False
+            assert good == ok, f"check_arg({a}) expected {'allow' if ok else 'reject'}"
         (WORKSPACE / "link").symlink_to(outside)
         for ok, path in [(True, WORKSPACE / "p" / "a.kicad_pcb"), (True, WORKSPACE / "p" / ".." / "p"),
                          (False, WORKSPACE / ".." / "x"), (False, Path("/etc/passwd")),
@@ -294,4 +309,6 @@ if __name__ == "__main__":
     if not token:
         sys.exit("KRT_MCP_TOKEN is empty: refusing to start")
     import uvicorn
-    uvicorn.run(BearerAuth(mcp.streamable_http_app(), token), host="0.0.0.0", port=3335, log_level="info")
+    app = mcp.streamable_http_app(streamable_http_path="/mcp", stateless_http=True, host="0.0.0.0",
+                                  max_request_body_size=2 * MAX_FILE)  # upload_file: 50 MB as base64
+    uvicorn.run(BearerAuth(app, token), host="0.0.0.0", port=3335, log_level="info")

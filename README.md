@@ -8,7 +8,7 @@ Bump: change `KICAD_IMAGE`, or `KRT_VERSION` and `KRT_SHA` (the commit of upstre
 
 ## krt-mcp
 
-The same image also holds an MCP server over KiCadRoutingTools, `/opt/krt-mcp/server.py` (Python `mcp` 1.30.0 in `/opt/krt-mcp/venv`, `--system-site-packages` so the apk numpy/scipy/shapely are visible). Run it as its own Deployment with a different command, uid 1000, the KiCad home volume at `/config` and `HOME=/config` (git uses `/config/.ssh` and `/config/.gitconfig`):
+The same image also holds an MCP server over KiCadRoutingTools, `/opt/krt-mcp/server.py` (Python `mcp` 2.3.0 in `/opt/krt-mcp/venv`, `--system-site-packages` so the apk numpy/scipy/shapely are visible). Run it as its own Deployment with a different command, uid 1000, the KiCad home volume at `/config` and `HOME=/config` (git uses `/config/.ssh` and `/config/.gitconfig`):
 
 ```
 /opt/krt-mcp/venv/bin/python /opt/krt-mcp/server.py
@@ -22,6 +22,6 @@ Streamable HTTP, stateless, `0.0.0.0:3335`, endpoint `/mcp`. `GET /healthz` is o
 | `KRT_ROOT` | `/opt/kicad-plugins/KiCadRoutingTools` |
 | `KRT_WORKSPACE` | `/config/projects` |
 
-Tools: `list_tools(door)`, `tool_help(tool)`, `run_tool(tool, args, project, timeout_s=900)` (registry tools only, no shell, cwd = `KRT_WORKSPACE/<project>`, path-looking args must stay inside the workspace, one run at a time, returns exit code, tails of stdout/stderr and changed files), `list_files(project, pattern)`, `upload_file(project, relpath, content_base64)` (to `uploads/<project>/`, max 50 MB), `download_file(path)` (max 50 MB), and git: `project_list()`, `project_pull(project)`, `project_status(project)`, `project_publish(project, message, paths=None)` (add, commit with a `Via: krt-mcp` trailer, push; one pull --rebase and retry on non-fast-forward). Git calls share the run lock with `run_tool`.
+Tools: `list_tools(door)`, `tool_help(tool)`, `run_tool(tool, args, project, timeout_s=900)` (registry tools only, no shell, cwd = `KRT_WORKSPACE/<project>`, args that end in a file extension or exist in the project must stay inside the workspace, `..` is rejected, one run at a time, returns exit code, tails of stdout/stderr and changed files), `list_files(project, pattern)`, `upload_file(project, relpath, content_base64)` (to `uploads/<project>/`, max 50 MB), `download_file(path)` (max 50 MB), and git: `project_list()`, `project_pull(project)`, `project_status(project)`, `project_publish(project, message, paths=None)` (add, commit with a `Via: krt-mcp` trailer, push; one pull --rebase and retry on non-fast-forward). Git calls share the run lock with `run_tool`.
 
-`python3 server.py --selftest` checks the path guard and the registry; the Dockerfile runs it at build time.
+KiKit 1.8.1 (backend for the KiKit PCM plugin) is pip-installed into the system Python. `python3 server.py --selftest` checks the path guard and the registry; the Dockerfile runs it at build time.
