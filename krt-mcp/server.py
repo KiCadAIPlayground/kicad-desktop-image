@@ -110,17 +110,26 @@ def _suite(suite):
     return ROOT if suite == "krt" else KH_ROOT
 
 
+_krt_cache = None
+
+
+def _krt_registry():
+    """krt_registry.py --json, computed once and cached: it probes --help of every tool (~80 s in the pod)."""
+    global _krt_cache
+    if _krt_cache is None:
+        cmd = [sys.executable, "-X", "utf8", str(ROOT / "krt_registry.py"), "--json", "--root", str(ROOT)]
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=600, cwd=ROOT)
+        if r.returncode:
+            raise RuntimeError(f"krt_registry.py failed: {r.stderr[-2000:]}")
+        _krt_cache = json.loads(r.stdout)["tools"]
+    return _krt_cache
+
+
 def _registry(suite="krt", door=None):
     _suite(suite)
     if suite == "happy":
         return _happy_registry()
-    cmd = [sys.executable, "-X", "utf8", str(ROOT / "krt_registry.py"), "--json", "--root", str(ROOT)]
-    if door:
-        cmd += ["--door", door]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=60, cwd=ROOT)
-    if r.returncode:
-        raise RuntimeError(f"krt_registry.py failed: {r.stderr[-2000:]}")
-    return json.loads(r.stdout)["tools"]
+    return [t for t in _krt_registry() if not door or door in t.get("scope", [])]
 
 
 def _tool_file(suite, name):
@@ -379,7 +388,8 @@ if __name__ == "__main__":
     if not token:
         sys.exit("KRT_MCP_TOKEN is empty: refusing to start")
     import uvicorn
-    _happy_registry()  # probe once at startup
+    _happy_registry()  # probe both registries once at startup (the pod is Ready afterwards)
+    _krt_registry()
     app = mcp.streamable_http_app(streamable_http_path="/mcp", stateless_http=True, host="0.0.0.0",
                                   max_request_body_size=2 * MAX_FILE)  # upload_file: 50 MB as base64
     uvicorn.run(BearerAuth(app, token), host="0.0.0.0", port=3335, log_level="info")
