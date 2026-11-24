@@ -164,15 +164,27 @@ def tool_help(suite: str, tool: str) -> str:
 
 
 @mcp.tool()
-def skill_doc(skill: str, suite: str = "happy") -> str:
-    """SKILL.md of a skill (happy: skills/<skill>; krt: .claude/skills/<skill>): how to use its scripts."""
+def skill_doc(skill: str = "", suite: str = "happy", offset: int = 0, max_chars: int = 40000) -> str:
+    """SKILL.md of a skill (happy: skills/<skill>; krt: .claude/skills/<skill>): how to use its scripts.
+    Paged (some are 260k chars): follow the 'next offset' line. Empty skill lists the suite's skills.
+    The first page starts with a table of contents (## headings with their offsets) to jump to a step."""
+    root = _suite(suite) / ("skills" if suite == "happy" else ".claude/skills")
+    if not skill:
+        return "\n".join(sorted(d.name for d in root.iterdir() if (d / "SKILL.md").is_file()))
     if not re.fullmatch(r"[a-z0-9-]+", skill):
         raise ValueError("invalid skill name")
-    root = _suite(suite)
-    f = root / ("skills" if suite == "happy" else ".claude/skills") / skill / "SKILL.md"
+    f = root / skill / "SKILL.md"
     if not f.is_file():
         raise ValueError(f"no such skill: {skill}")
-    return f.read_text(encoding="utf-8", errors="replace")
+    text = f.read_text(encoding="utf-8", errors="replace")
+    offset, max_chars = max(0, offset), min(max(1000, max_chars), 80000)
+    end = min(len(text), offset + max_chars)
+    head = f"[{skill}: chars {offset}-{end} of {len(text)}"
+    head += f"; next: skill_doc(skill={skill!r}, suite={suite!r}, offset={end})]" if end < len(text) else "; end]"
+    if offset == 0 and end < len(text):
+        toc = [f"  {m.start():>7}  {m.group(0)}" for m in re.finditer(r"^## .+$", text, re.M)]
+        head += "\nContents (offset, heading):\n" + "\n".join(toc)
+    return head + "\n\n" + text[offset:end]
 
 
 def _snapshot(d):
@@ -377,6 +389,21 @@ def selftest():
     assert happy, "happy registry returned no tools"
     assert "usage" in tool_help("happy", happy[0]["name"]).lower(), "tool_help empty"
     assert "name:" in skill_doc("kicad"), "skill_doc empty"
+    # paging: the pages of the biggest krt skill add up to the whole file, each page within the limit
+    big = ROOT / ".claude/skills/plan-pcb-routing/SKILL.md"
+    if big.is_file():
+        text, got, off = big.read_text(encoding="utf-8", errors="replace"), "", 0
+        while True:
+            page = skill_doc("plan-pcb-routing", "krt", off)
+            body = page.split("\n\n", 1)[1]
+            assert len(body) <= 40000
+            got += body
+            m = re.search(r"offset=(\d+)\)\]", page.split("\n", 1)[0])
+            if not m:
+                break
+            off = int(m.group(1))
+        assert got == text, "skill_doc paging lost text"
+    assert "plan-pcb-routing" in skill_doc("", "krt"), "skill list empty"
     print(f"selftest ok: {len(tools)} krt tools, {len(happy)} happy tools")
 
 
