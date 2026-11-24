@@ -10,6 +10,10 @@ RUN apk add --no-cache rust cargo python3 python3-dev build-base git
 RUN git clone https://github.com/KiCadAIPlayground/KiCadRoutingTools.git /src \
  && git -C /src checkout "${KRT_SHA}"
 ENV RUSTFLAGS="-C target-feature=-crt-static" PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
+# mimalloc defaults to initial-exec TLS, which musl refuses in a dlopen()ed library (Python extension):
+# "initial-exec TLS resolves to dynamic definition". Its local_dynamic_tls feature exists for exactly this.
+RUN sed -i 's/^mimalloc = { version = "0.1", default-features = false }/mimalloc = { version = "0.1", default-features = false, features = ["local_dynamic_tls"] }/' /src/rust_router/Cargo.toml \
+ && grep -q 'local_dynamic_tls' /src/rust_router/Cargo.toml
 RUN cargo build --release --manifest-path /src/rust_router/Cargo.toml \
  && cp /src/rust_router/target/release/libgrid_router.so /src/rust_router/grid_router.so \
  && cp /src/rust_router/grid_router.so /src/rust_router/grid_router-linux-x86_64.so \
