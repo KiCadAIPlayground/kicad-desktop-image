@@ -25,3 +25,7 @@ Streamable HTTP, stateless, `0.0.0.0:3335`, endpoint `/mcp`. `GET /healthz` is o
 Tools: `list_tools(door)`, `tool_help(tool)`, `run_tool(tool, args, project, timeout_s=900)` (registry tools only, no shell, cwd = `KRT_WORKSPACE/<project>`, args that end in a file extension or exist in the project must stay inside the workspace, `..` is rejected, one run at a time, returns exit code, tails of stdout/stderr and changed files), `list_files(project, pattern)`, `upload_file(project, relpath, content_base64)` (to `uploads/<project>/`, max 50 MB), `download_file(path)` (max 50 MB), and git: `project_list()`, `project_pull(project)`, `project_status(project)`, `project_publish(project, message, paths=None)` (add, commit with a `Via: krt-mcp` trailer, push; one pull --rebase and retry on non-fast-forward). Git calls share the run lock with `run_tool`.
 
 KiKit 1.8.1 (backend for the KiKit PCM plugin) is pip-installed into the system Python. `python3 server.py --selftest` checks the path guard and the registry; the Dockerfile runs it at build time.
+
+## Claude Code on the shared desktop
+
+Claude Code (pinned, npm `stable` tag, auto-updater off) is installed in the image. Each person starts it with `claude-me <name>` in a desktop terminal: that sets `CLAUDE_CONFIG_DIR=/config/claude/<name>` (mode 700, created on first use), starts in `/config/projects` and runs `claude` with the remaining args, so everyone logs in with their own Anthropic account and no subscription is shared. `claude-me` without a name lists the existing profiles; names are `[a-z0-9-]{1,32}`.

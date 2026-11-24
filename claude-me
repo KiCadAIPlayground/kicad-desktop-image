@@ -1,0 +1,20 @@
+#!/bin/sh
+# claude-me <name> [claude args...]: Claude Code with its own login per person on the shared desktop.
+base=/config/claude
+usage() {
+  echo "usage: claude-me <name> [claude args...]   (name: [a-z0-9-]{1,32}; profile in $base/<name>)"
+  echo "existing profiles:"
+  ls "$base" 2>/dev/null | sed 's/^/  /'
+}
+case "$1" in "" | -h | --help) usage; exit 0 ;; esac
+name=$1
+shift
+if ! printf '%s' "$name" | grep -qE '^[a-z0-9-]{1,32}$'; then
+  echo "claude-me: invalid name '$name'" >&2
+  usage >&2
+  exit 2
+fi
+mkdir -p "$base/$name" && chmod 700 "$base/$name" || exit 1
+export CLAUDE_CONFIG_DIR="$base/$name"
+cd /config/projects 2>/dev/null || true
+exec claude "$@"

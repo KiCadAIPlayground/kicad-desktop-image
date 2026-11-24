@@ -19,7 +19,7 @@ RUN sed -i 's/^mimalloc = { version = "0.1", default-features = false }/mimalloc
 RUN cargo build --release --manifest-path /src/rust_router/Cargo.toml \
  && cp /src/rust_router/target/release/libgrid_router.so /src/rust_router/grid_router.so \
  && cp /src/rust_router/grid_router.so /src/rust_router/grid_router-linux-x86_64.so \
- && rm -rf /src/rust_router/target /src/.git
+ && rm -rf /src/rust_router/target
 
 FROM ${KICAD_IMAGE}
 # KiCad's Python is the system python (pip is externally managed): the plugin's deps come from Alpine packages
@@ -30,6 +30,16 @@ COPY --from=krt-build /src /opt/kicad-plugins/KiCadRoutingTools
 RUN pip install --no-cache-dir --break-system-packages kikit==1.8.1 click==8.5.1 commentjson==0.9.0 euclid3==0.1 \
  lark-parser==0.7.8 markdown2==2.5.5 ply==3.11 prettytable==0.7.2 pybars3==0.9.7 PyMeta3==0.5.1 pypng==0.0.19 \
  solidpython==1.1.3
+# krt_registry.py inventories the clone with `git ls-files`, so /src keeps its .git; the pod runs as another uid
+RUN git config --system --add safe.directory '*'
+# Claude Code, pinned to the npm `stable` dist-tag (npm is an officially supported route; it pulls the musl binary).
+# Version is fixed by the image, so the auto-updater is off.
+RUN apk add --no-cache nodejs npm \
+ && npm install -g --no-fund --no-audit @anthropic-ai/claude-code@2.1.325 \
+ && printf 'export DISABLE_AUTOUPDATER=1\n' > /etc/profile.d/claude.sh
+ENV DISABLE_AUTOUPDATER=1
+COPY claude-me /usr/local/bin/claude-me
+RUN chmod 755 /usr/local/bin/claude-me && claude --version && claude-me --help
 # smoke test: the router extension and kikit load in KiCad's Python
 RUN cd /opt/kicad-plugins/KiCadRoutingTools/rust_router && python3 -c "import grid_router; print('grid_router ok')" && python3 -c "import kikit; print('kikit ok')"
 
