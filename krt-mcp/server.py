@@ -326,7 +326,7 @@ def installation_token():
 def credential_answer(request_body, token):
     """git-credential reply for a `get` request; only host=github.com gets a token. Returns (status, text)."""
     fields = dict(l.split("=", 1) for l in request_body.splitlines() if "=" in l)
-    if fields.get("host") != "github.com":
+    if fields.get("host") != "github.com" or fields.get("protocol") != "https":
         return 403, "host not allowed\n"
     return 200, f"username=x-access-token\npassword={token}\n"
 
@@ -480,7 +480,7 @@ async def project_pickup() -> dict:
 async def project_publish(project: str, message: str, paths: list[str] | None = None) -> str:
     """Commit (paths inside the project, or everything) with `message` + trailer 'Via: krt-mcp' on a new branch
     cluster/<UTC date-time>-<slug>, push that branch and open a pull request against the default branch (never pushed
-    to). The clone stays on the new branch. Returns the PR URL."""
+    to), then return the clone to the default branch (the pushed branch stays on the remote). Returns the PR URL."""
     if not message.strip():
         raise ValueError("empty commit message")
     if not GIT_ON:
@@ -510,14 +510,19 @@ async def project_publish(project: str, message: str, paths: list[str] | None = 
         token = await asyncio.to_thread(installation_token)
         try:
             base = (await asyncio.to_thread(gh_api, "GET", f"/repos/{repo}", token))["default_branch"]
+        except RuntimeError as e:
+            return f"commit {sha}, pushed {branch}, looking up the default branch failed (clone stays on {branch}): {e}"
+        try:
             title = message.strip().splitlines()[0][:200]
             body = ("Opened by krt-mcp from the k3s cluster (project_publish).\n\nChanged files:\n"
                     + "\n".join(f"- `{f}`" for f in files[:100]) + ("\n- ..." if len(files) > 100 else ""))
-            pr = await asyncio.to_thread(gh_api, "POST", f"/repos/{repo}/pulls", token,
-                                         {"title": title, "head": branch, "base": base, "body": body})
+            pr = (await asyncio.to_thread(gh_api, "POST", f"/repos/{repo}/pulls", token,
+                                          {"title": title, "head": branch, "base": base, "body": body}))["html_url"]
         except RuntimeError as e:
-            return f"commit {sha}, pushed {branch}, opening the PR failed: {e}"
-        return pr["html_url"]
+            pr = f"commit {sha}, pushed {branch}, opening the PR failed: {e}"
+        # the branch is pushed (it stays on the remote): leave the clone on the default branch, ready for pull / next publish
+        rc, out = await _git(cwd, "checkout", base)
+        return pr if rc == 0 else f"{pr}\ncheckout {base} failed (clone stays on {branch}):\n{out}"
     return await _locked_git(project, go)
 
 
@@ -601,6 +606,7 @@ def selftest():
         raise AssertionError(f"check_env accepted {bad}")
     assert credential_answer("protocol=https\nhost=github.com\n", "T") == (200, "username=x-access-token\npassword=T\n")
     assert credential_answer("host=evil.com\n", "T")[0] == 403 and credential_answer("", "T")[0] == 403
+    assert credential_answer("protocol=http\nhost=github.com\n", "T")[0] == 403
     with tempfile.TemporaryDirectory() as k:
         key = Path(k) / "k.pem"
         subprocess.run(["openssl", "genrsa", "-out", str(key), "2048"], check=True, capture_output=True)
@@ -612,6 +618,14 @@ def selftest():
         r = subprocess.run(["openssl", "dgst", "-sha256", "-verify", str(pub), "-signature", str(Path(k) / "sig")],
                            input=f"{h}.{p}".encode(), capture_output=True)
         assert r.returncode == 0, "JWT signature does not verify"
+    with tempfile.TemporaryDirectory() as k:  # publish's branch dance: commit on cluster/..., then back on the default branch
+        async def dance():
+            d = Path(k)
+            for a in (("init", "-q", "-b", "main"), ("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "i"),
+                      ("checkout", "-q", "-b", branch_name("x")), ("checkout", "main")):
+                assert (await _git(d, *a))[0] == 0, a
+            return (await _git(d, "branch", "--show-current"))[1].strip()
+        assert asyncio.run(dance()) == "main"
     tools, happy = list_tools(), list_tools("happy")
     assert tools, "krt registry returned no tools"
     assert happy, "happy registry returned no tools"
