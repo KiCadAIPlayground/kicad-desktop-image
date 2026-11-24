@@ -23,13 +23,17 @@ RUN cargo build --release --manifest-path /src/rust_router/Cargo.toml \
 
 FROM ${KICAD_IMAGE}
 # KiCad's Python is the system python (pip is externally managed): the plugin's deps come from Alpine packages
-RUN apk add --no-cache py3-numpy py3-scipy py3-shapely py3-pillow git openssh-client
+RUN apk add --no-cache py3-numpy py3-scipy py3-shapely py3-pillow git openssh-client openssh-server openssl
 COPY --from=krt-build /src /opt/kicad-plugins/KiCadRoutingTools
 # KiKit backend for the KiKit PCM plugin (com.github.yaqwsx.kikit), into KiCad's system Python. numpy and shapely
 # come from apk above, so pip leaves them alone; the rest is pinned to what kikit 1.8.1 resolves to.
 RUN pip install --no-cache-dir --break-system-packages kikit==1.8.1 click==8.5.1 commentjson==0.9.0 euclid3==0.1 \
  lark-parser==0.7.8 markdown2==2.5.5 ply==3.11 prettytable==0.7.2 pybars3==0.9.7 PyMeta3==0.5.1 pypng==0.0.19 \
  solidpython==1.1.3
+# uid/gid 1000 for abc at build time (the base creates it as 911; its init-adduser remaps it to PUID/PGID, which is
+# 1000 on the desktop, with usermod -o so this is a no-op there). Pods that skip s6 (krt-mcp) run as uid 1000 and
+# need the passwd entry, or ssh/git fail with "No user exists for uid 1000". sshd is installed, not configured.
+RUN groupmod -o -g 1000 abc && usermod -o -u 1000 abc && id abc | grep -q 'uid=1000(abc) gid=1000'
 # krt_registry.py inventories the clone with `git ls-files`, so /src keeps its .git; the pod runs as another uid
 RUN git config --system --add safe.directory '*'
 # Claude Code, pinned to the npm `stable` dist-tag (npm is an officially supported route; it pulls the musl binary).
@@ -39,8 +43,9 @@ RUN apk add --no-cache nodejs npm \
  && printf 'export DISABLE_AUTOUPDATER=1\n' > /etc/profile.d/claude.sh
 ENV DISABLE_AUTOUPDATER=1
 COPY claude-me /usr/local/bin/claude-me
+COPY git-credential-k3s /usr/local/bin/git-credential-k3s
 COPY claude-wrapper /usr/local/sbin/claude
-RUN chmod 755 /usr/local/bin/claude-me /usr/local/sbin/claude && [ "$(command -v claude)" = /usr/local/sbin/claude ] \
+RUN chmod 755 /usr/local/bin/claude-me /usr/local/sbin/claude /usr/local/bin/git-credential-k3s && [ "$(command -v claude)" = /usr/local/sbin/claude ] \
  && CLAUDE_CONFIG_DIR=/tmp claude --version && { HOME=/nonexistent claude --version >/dev/null 2>&1; [ $? = 1 ]; } && /usr/local/bin/claude --version && /usr/local/bin/claude --help | grep -e --plugin-dir && /usr/local/bin/claude --help | grep -e --add-dir \
  && claude-me --help && { claude-me </dev/null >/dev/null 2>&1; [ $? = 2 ]; }
 # smoke test: the router extension and kikit load in KiCad's Python
