@@ -8,7 +8,7 @@ Bump: change `KICAD_IMAGE`, or `KRT_VERSION` and `KRT_SHA` (the commit of upstre
 
 ## krt-mcp
 
-The same image also holds an MCP server (`krt` and `happy` suites) over KiCadRoutingTools and [kicad-happy](https://github.com/KiCadAIPlayground/kicad-happy) (baked in at `/opt/kicad-happy`, pinned by `KH_SHA`, with ngspice and poppler-utils), `/opt/krt-mcp/server.py` (Python `mcp` 2.3.0 in `/opt/krt-mcp/venv`, `--system-site-packages` so the apk numpy/scipy/shapely are visible). Run it as its own Deployment with a different command, uid 1000, the KiCad home volume at `/config` and `HOME=/config` (git uses `/config/.ssh` and `/config/.gitconfig`):
+The same image also holds an MCP server (`krt` and `happy` suites) over KiCadRoutingTools and [kicad-happy](https://github.com/KiCadAIPlayground/kicad-happy) (baked in at `/opt/kicad-happy`, pinned by `KH_SHA`, with ngspice and poppler-utils), `/opt/krt-mcp/server.py` (Python `mcp` 2.3.0 in `/opt/krt-mcp/venv`, `--system-site-packages` so the apk numpy/scipy/shapely are visible). Run it as its own Deployment with a different command, uid 1000, the KiCad home volume at `/config` and `HOME=/config` (git reads `/config/.gitconfig`):
 
 ```
 /opt/krt-mcp/venv/bin/python /opt/krt-mcp/server.py
@@ -22,10 +22,25 @@ Streamable HTTP, stateless, `0.0.0.0:3335`, endpoint `/mcp`. `GET /healthz` is o
 | `KRT_ROOT` | `/opt/kicad-plugins/KiCadRoutingTools` |
 | `KH_ROOT` | `/opt/kicad-happy` |
 | `KRT_WORKSPACE` | `/config/projects` |
+| `GITHUB_APP_ID`, `GITHUB_APP_KEY_FILE`, `GITHUB_ORG` | all three set = git features on, otherwise off (the server still runs) |
+| `KRT_PICKUP_SECONDS` | `300` |
+| `KRT_PICKUP_TEMPLATE` | `KiCadAIPlayground/kicad-project-template` |
+| `KRT_PICKUP_EXTRA` | `Test-KiCAD` (comma list of repo names) |
+| `KRT_ENV_ALLOW` | `FANOUT_ESCAPE,PYTHONHASHSEED,KRT_SEED` |
 
-Tools: `list_tools(suite, door)`, `tool_help(suite, tool)`, `skill_doc(skill, suite="happy")` (SKILL.md, for clients without skills), `run_tool(suite, tool, args, project, timeout_s=900)` (registry tools only; `happy` tools are named `<skill>/<script>.py`, the runnable ones among `skills/*/scripts/*.py`; no shell, cwd = `KRT_WORKSPACE/<project>`, args that end in a file extension or exist in the project must stay inside the workspace, `..` is rejected, one run at a time, returns exit code, tails of stdout/stderr and changed files), `list_files(project, pattern)`, `upload_file(project, relpath, content_base64)` (to `uploads/<project>/`, max 50 MB), `download_file(path)` (max 50 MB), and git: `project_list()`, `project_pull(project)`, `project_status(project)`, `project_publish(project, message, paths=None)` (add, commit with a `Via: krt-mcp` trailer, push; one pull --rebase and retry on non-fast-forward). Git calls share the run lock with `run_tool`.
+Tools: `list_tools(suite, door)`, `tool_help(suite, tool)`, `skill_doc(skill, suite="happy")` (SKILL.md, for clients without skills), `run_tool(suite, tool, args, project, timeout_s=900)` (registry tools only; `happy` tools are named `<skill>/<script>.py`, the runnable ones among `skills/*/scripts/*.py`; no shell, cwd = `KRT_WORKSPACE/<project>`, args that end in a file extension or exist in the project must stay inside the workspace, `..` is rejected, one run at a time, returns exit code, tails of stdout/stderr and changed files), `list_files(project, pattern)`, `upload_file(project, relpath, content_base64)` (to `uploads/<project>/`, max 50 MB), `download_file(path)` (max 50 MB), and git: `project_list()`, `project_pull(project)`, `project_status(project)`, `project_pickup()`, `project_publish(project, message, paths=None)`. Git calls share the run lock with `run_tool`.
 
-KiKit 1.8.1 (backend for the KiKit PCM plugin) is pip-installed into the system Python. `python3 server.py --selftest` checks the path guard and the registry; the Dockerfile runs it at build time.
+`run_tool` takes `env` (dict): only names in `KRT_ENV_ALLOW`, values matching `^[A-Za-z0-9_.,:/=+-]{0,200}$`, anything else is rejected.
+
+### Git service (GitHub App)
+Git is HTTPS only, with a GitHub App installation token: JWT (RS256, signed with the `openssl` binary) from `GITHUB_APP_ID` + `GITHUB_APP_KEY_FILE`, installation looked up via `GET /orgs/$GITHUB_ORG/installation`, token requested with only `contents:write, pull_requests:write, workflows:write, metadata:read` and cached until 5 minutes before expiry. The token reaches git through the environment of that one process (a credential helper that echoes `$KRT_GIT_TOKEN`), never a file, URL or log line. An `origin` of `git@github.com:o/r` is switched to `https://github.com/o/r.git` on first use.
+- **Pickup**: every `KRT_PICKUP_SECONDS` a background task lists the installation's repos (`GET /installation/repositories`) and clones into the workspace those missing ones whose `template_repository` is `KRT_PICKUP_TEMPLATE` or whose name is in `KRT_PICKUP_EXTRA`. Logs only repo names. `project_pickup()` runs it once and returns `cloned` / `present` / `failed`.
+- **`POST /git-token`** (same bearer token as `/mcp`): body in git-credential format; only `protocol=https` + `host=github.com` gets `username=x-access-token\npassword=<token>`, anything else 403. `/usr/local/bin/git-credential-k3s` (in the image) is the matching helper for the desktop: on `get` it POSTs stdin there with `Authorization: Bearer $KRT_MCP_TOKEN`; `store`/`erase` are ignored. Set it with `git config --global credential.https://github.com.helper /usr/local/bin/git-credential-k3s`.
+- **`project_publish` = pull request**: commits (trailer `Via: krt-mcp`) on a new branch `cluster/<UTC yyyymmdd-HHMM>-<slug of message>`, pushes that branch and opens a PR against the default branch, returning the PR URL. It never pushes to the default branch. Afterwards the clone is switched back to the default branch (`git checkout <default>`); the pushed `cluster/...` branch stays on the remote (and as a local branch). If the push fails, or the default branch cannot be looked up, the clone stays on the new branch and the message says so.
+
+The user `abc` has uid/gid 1000 in the image (the base creates 911, its init remaps to `PUID`/`PGID` at runtime), so pods that skip the s6 init, like krt-mcp, have a passwd entry. `openssh-server` is installed for later, not configured or started.
+
+KiKit 1.8.1 (backend for the KiKit PCM plugin) is pip-installed into the system Python. `python3 server.py --selftest` checks the path guard, the registry, branch slugs, the env allow-list, the credential reply and the JWT (with a throwaway key); the Dockerfile runs it at build time.
 
 ## Claude Code on the shared desktop
 

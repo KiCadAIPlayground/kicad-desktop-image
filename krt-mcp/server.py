@@ -13,6 +13,11 @@ Environment:
   KRT_ROOT        KiCadRoutingTools clone   (default /opt/kicad-plugins/KiCadRoutingTools)
   KH_ROOT         kicad-happy clone         (default /opt/kicad-happy)
   KRT_WORKSPACE   the only tree the tools may read or write (default /config/projects)
+  GITHUB_APP_ID, GITHUB_APP_KEY_FILE, GITHUB_ORG   GitHub App credentials; all three set = git features on
+                  (https only, installation tokens, project pickup, publish = PR), otherwise off
+  KRT_PICKUP_SECONDS (300), KRT_PICKUP_TEMPLATE (KiCadAIPlayground/kicad-project-template),
+  KRT_PICKUP_EXTRA (Test-KiCAD)   which installation repos the pickup loop clones
+  KRT_ENV_ALLOW   env var names run_tool may set (FANOUT_ESCAPE,PYTHONHASHSEED,KRT_SEED)
 
 Safety model: tools run only by registry name (never a path from the caller), without a shell, with cwd inside the
 workspace, and every path-looking argument must resolve inside the workspace (symlinks included). One run at a time.
@@ -24,6 +29,10 @@ import asyncio
 import base64
 import hmac
 import json
+import urllib.error
+import urllib.request
+import threading
+from datetime import datetime, timezone
 import os
 import re
 import subprocess
@@ -38,6 +47,18 @@ from mcp.server.mcpserver import MCPServer
 ROOT = Path(os.environ.get("KRT_ROOT", "/opt/kicad-plugins/KiCadRoutingTools"))
 KH_ROOT = Path(os.environ.get("KH_ROOT", "/opt/kicad-happy"))
 WORKSPACE = Path(os.environ.get("KRT_WORKSPACE", "/config/projects"))
+GH_API = "https://api.github.com"
+APP_ID = os.environ.get("GITHUB_APP_ID", "")
+APP_KEY_FILE = os.environ.get("GITHUB_APP_KEY_FILE", "")
+ORG = os.environ.get("GITHUB_ORG", "")
+GIT_ON = bool(APP_ID and APP_KEY_FILE and ORG and Path(APP_KEY_FILE).is_file())
+# whatever the app has been granted, a token only ever carries these
+TOKEN_PERMS = {"contents": "write", "pull_requests": "write", "workflows": "write", "metadata": "read"}
+PICKUP_SECONDS = int(os.environ.get("KRT_PICKUP_SECONDS", "300"))
+PICKUP_TEMPLATE = os.environ.get("KRT_PICKUP_TEMPLATE", "KiCadAIPlayground/kicad-project-template")
+PICKUP_EXTRA = [n for n in os.environ.get("KRT_PICKUP_EXTRA", "Test-KiCAD").split(",") if n]
+ENV_ALLOW = {n for n in os.environ.get("KRT_ENV_ALLOW", "FANOUT_ESCAPE,PYTHONHASHSEED,KRT_SEED").split(",") if n}
+ENV_VALUE = re.compile(r"[A-Za-z0-9_.,:/=+-]{0,200}")
 MAX_FILE = 50 * 1024 * 1024
 TAIL = 20000
 PATH_EXTS = (".kicad_pcb", ".kicad_pro", ".kicad_sch", ".kicad_prl", ".kicad_dru", ".json", ".txt", ".csv", ".png",
@@ -192,9 +213,11 @@ def _snapshot(d):
 
 
 @mcp.tool()
-async def run_tool(suite: str, tool: str, args: list[str], project: str, timeout_s: int = 900) -> dict:
-    """Run a tool of a suite (krt or happy) with args in WORKSPACE/<project>. Path-like args must stay inside the workspace."""
-    script, cwd = _tool_file(suite, tool), _project(project)
+async def run_tool(suite: str, tool: str, args: list[str], project: str, timeout_s: int = 900,
+                   env: dict[str, str] | None = None) -> dict:
+    """Run a tool of a suite (krt or happy) with args in WORKSPACE/<project>. Path-like args must stay inside the workspace.
+    env: extra environment, only names in KRT_ENV_ALLOW (FANOUT_ESCAPE, PYTHONHASHSEED, KRT_SEED by default)."""
+    script, cwd, extra = _tool_file(suite, tool), _project(project), check_env(env)
     for a in args:
         check_arg(cwd, a)
     if _lock.locked():
@@ -204,7 +227,7 @@ async def run_tool(suite: str, tool: str, args: list[str], project: str, timeout
         proc = await asyncio.create_subprocess_exec(
             sys.executable, "-X", "utf8", str(script), *args, cwd=cwd,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
-            env={**os.environ, "PYTHONUNBUFFERED": "1"})
+            env={**os.environ, **extra, "PYTHONUNBUFFERED": "1"})
         try:
             out, err = await asyncio.wait_for(proc.communicate(), timeout_s)
         except asyncio.TimeoutError:
@@ -254,17 +277,150 @@ def download_file(path: str) -> dict:
     return {"path": path, "size": f.stat().st_size, "content_base64": base64.b64encode(f.read_bytes()).decode()}
 
 
-async def _git(cwd, *args, timeout=120):
-    """Run git in cwd (list args, no shell); returns (exit code, combined output)."""
+def _b64url(b):
+    return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+
+def make_jwt(app_id, key_file, now=None):
+    """GitHub App JWT (RS256, 9 minutes), signed by the openssl binary: no crypto library in the image."""
+    now = int(now or time.time())
+    head = _b64url(b'{"alg":"RS256","typ":"JWT"}') + "." + _b64url(
+        json.dumps({"iat": now - 60, "exp": now + 540, "iss": str(app_id)}).encode())
+    sig = subprocess.run(["openssl", "dgst", "-sha256", "-sign", str(key_file)], input=head.encode(),
+                         capture_output=True, check=True, timeout=20).stdout
+    return head + "." + _b64url(sig)
+
+
+def gh_api(method, path, token, body=None):
+    """One GitHub REST call; errors carry status and a body snippet, never the token."""
+    req = urllib.request.Request(
+        GH_API + path, method=method, data=json.dumps(body).encode() if body is not None else None,
+        headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
+                 "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "krt-mcp"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"GitHub {method} {path}: {e.code} {e.read()[:300].decode('utf-8', 'replace')}") from None
+
+
+_tok = {"token": "", "exp": 0.0}
+_tok_lock = threading.Lock()
+
+
+def installation_token():
+    """Scoped installation token of the org, cached until 5 minutes before it expires (blocking: use to_thread)."""
+    if not GIT_ON:
+        raise RuntimeError("git features are off (GITHUB_APP_ID, GITHUB_APP_KEY_FILE, GITHUB_ORG)")
+    with _tok_lock:
+        if _tok["token"] and _tok["exp"] - time.time() > 300:
+            return _tok["token"]
+        jwt = make_jwt(APP_ID, APP_KEY_FILE)
+        inst = gh_api("GET", f"/orgs/{ORG}/installation", jwt)["id"]
+        r = gh_api("POST", f"/app/installations/{inst}/access_tokens", jwt, {"permissions": TOKEN_PERMS})
+        _tok["token"] = r["token"]
+        _tok["exp"] = datetime.strptime(r["expires_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp()
+        return _tok["token"]
+
+
+def credential_answer(request_body, token):
+    """git-credential reply for a `get` request; only host=github.com gets a token. Returns (status, text)."""
+    fields = dict(l.split("=", 1) for l in request_body.splitlines() if "=" in l)
+    if fields.get("host") != "github.com" or fields.get("protocol") != "https":
+        return 403, "host not allowed\n"
+    return 200, f"username=x-access-token\npassword={token}\n"
+
+
+def slug(text, n=40):
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:n].strip("-") or "change"
+
+
+def branch_name(message, now=None):
+    return f"cluster/{(now or datetime.now(timezone.utc)):%Y%m%d-%H%M}-{slug(message.strip().splitlines()[0])}"
+
+
+def check_env(env):
+    """run_tool env: only allow-listed names, values of a boring character set."""
+    for k, v in (env or {}).items():
+        if k not in ENV_ALLOW:
+            raise ValueError(f"env var not allowed: {k} (allowed: {sorted(ENV_ALLOW)})")
+        if not ENV_VALUE.fullmatch(str(v)):
+            raise ValueError(f"env value for {k} has characters outside A-Za-z0-9_.,:/=+- or is longer than 200")
+    return {k: str(v) for k, v in (env or {}).items()}
+
+
+GH_URL = "https://github.com"
+# helper fed from the env of this one git process: the token is never on a command line or on disk
+GIT_HELPER = '!f() { echo username=x-access-token; echo "password=$KRT_GIT_TOKEN"; }; f'
+
+
+async def _git(cwd, *args, timeout=120, net=False):
+    """Run git in cwd (list args, no shell); returns (exit code, combined output).
+    net=True (clone, pull, push) authenticates to github.com with the installation token when git is on."""
+    env, pre, token = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}, [], ""
+    if net and GIT_ON:
+        token = await asyncio.to_thread(installation_token)
+        env["KRT_GIT_TOKEN"] = token
+        # the empty values reset helpers from /config/.gitconfig (the desktop's helper would call this server)
+        pre = ["-c", "credential.helper=", "-c", f"credential.{GH_URL}.helper=", "-c", f"credential.{GH_URL}.helper={GIT_HELPER}"]
     proc = await asyncio.create_subprocess_exec(
-        "git", *args, cwd=cwd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
-        env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
+        "git", *pre, *args, cwd=cwd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, env=env)
     try:
         out, _ = await asyncio.wait_for(proc.communicate(), timeout)
     except asyncio.TimeoutError:
         proc.kill()
         out = (await proc.communicate())[0] + f"\n[killed after {timeout}s timeout]".encode()
-    return proc.returncode, out.decode("utf-8", "replace")[-TAIL:]
+    out = out.decode("utf-8", "replace")
+    return proc.returncode, (out.replace(token, "***") if token else out)[-TAIL:]
+
+
+async def _https_remote(cwd):
+    """Convert an SSH github.com origin to https (first use); returns 'owner/repo' of origin, or '' if not github."""
+    _, url = await _git(cwd, "remote", "get-url", "origin")
+    m = re.fullmatch(r"(?:git@github\.com:|ssh://git@github\.com/|https://github\.com/)([\w.-]+/[\w.-]+?)(?:\.git)?/?", url.strip())
+    if not m:
+        return ""
+    if not url.strip().startswith("https://"):
+        await _git(cwd, "remote", "set-url", "origin", f"{GH_URL}/{m.group(1)}.git")
+    return m.group(1)
+
+
+def _pickup_repos():
+    token = installation_token()
+    repos, page = [], 1
+    while True:
+        r = gh_api("GET", f"/installation/repositories?per_page=100&page={page}", token)["repositories"]
+        repos += r
+        if len(r) < 100:
+            return repos
+        page += 1
+
+
+async def pickup_once():
+    """Clone the installation's missing project repos (created from the template, or named in KRT_PICKUP_EXTRA)."""
+    res = {"cloned": [], "present": [], "failed": []}
+    for r in await asyncio.to_thread(_pickup_repos):
+        name = r["name"]
+        if not (((r.get("template_repository") or {}).get("full_name") == PICKUP_TEMPLATE) or name in PICKUP_EXTRA):
+            continue
+        dest = WORKSPACE / name
+        if not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9._-]*", name) or dest.exists():
+            res["present" if dest.exists() else "failed"].append(name)
+            continue
+        rc, _ = await _git(WORKSPACE, "clone", f"{GH_URL}/{r['full_name']}.git", name, timeout=600, net=True)
+        res["cloned" if rc == 0 else "failed"].append(name)
+    return res
+
+
+async def pickup_loop():
+    while True:
+        try:
+            res = await pickup_once()
+            if res["cloned"] or res["failed"]:
+                print(f"pickup: {res}", file=sys.stderr, flush=True)
+        except Exception as e:
+            print(f"pickup error: {e}", file=sys.stderr, flush=True)
+        await asyncio.sleep(PICKUP_SECONDS)
 
 
 @mcp.tool()
@@ -294,9 +450,11 @@ async def _locked_git(project, *calls):
 
 @mcp.tool()
 async def project_pull(project: str) -> str:
-    """git pull --rebase --autostash in the project."""
+    """git pull --rebase --autostash in the project (github.com over https with the app token)."""
     async def go(cwd):
-        rc, out = await _git(cwd, "pull", "--rebase", "--autostash")
+        if GIT_ON:
+            await _https_remote(cwd)
+        rc, out = await _git(cwd, "pull", "--rebase", "--autostash", net=True)
         return f"exit {rc}\n{out}"
     return await _locked_git(project, go)
 
@@ -310,30 +468,61 @@ async def project_status(project: str) -> str:
 
 
 @mcp.tool()
+async def project_pickup() -> dict:
+    """Run the pickup once: clone installation repos made from the project template (or in KRT_PICKUP_EXTRA) that are
+    not in the workspace yet. Returns cloned / present / failed repo names."""
+    if not GIT_ON:
+        raise ValueError("git features are off")
+    return await pickup_once()
+
+
+@mcp.tool()
 async def project_publish(project: str, message: str, paths: list[str] | None = None) -> str:
-    """Commit (paths inside the project, or everything) with `message` + trailer 'Via: krt-mcp', then git push.
-    On a non-fast-forward push: one pull --rebase, one retry. Returns commit sha and push output."""
+    """Commit (paths inside the project, or everything) with `message` + trailer 'Via: krt-mcp' on a new branch
+    cluster/<UTC date-time>-<slug>, push that branch and open a pull request against the default branch (never pushed
+    to), then return the clone to the default branch (the pushed branch stays on the remote). Returns the PR URL."""
     if not message.strip():
         raise ValueError("empty commit message")
+    if not GIT_ON:
+        raise ValueError("git features are off (GITHUB_APP_* env missing)")
 
     async def go(cwd):
         for p in paths or []:
             guard(cwd / p, cwd)
+        repo = await _https_remote(cwd)
+        if not repo:
+            return "error: origin is not a github.com repository"
         rc, out = await _git(cwd, "add", "--", *paths) if paths else await _git(cwd, "add", "-A")
         if rc:
             return f"git add failed:\n{out}"
-        rc, out = await _git(cwd, "commit", "-m", message.strip(), "-m", "Via: krt-mcp")
-        if rc:
-            return f"git commit failed (nothing to commit?):\n{out}"
+        files = (await _git(cwd, "diff", "--cached", "--name-only"))[1].split()
+        if not files:
+            return "nothing to commit"
+        branch = branch_name(message)
+        for args in (("checkout", "-b", branch), ("commit", "-m", message.strip(), "-m", "Via: krt-mcp")):
+            rc, out = await _git(cwd, *args)
+            if rc:
+                return f"git {args[0]} failed:\n{out}"
         sha = (await _git(cwd, "rev-parse", "HEAD"))[1].strip()
-        rc, out = await _git(cwd, "push")
+        rc, out = await _git(cwd, "push", "-u", "origin", f"HEAD:refs/heads/{branch}", net=True)
         if rc:
-            prc, pout = await _git(cwd, "pull", "--rebase", "--autostash")
-            if prc:
-                return f"commit {sha}\npush failed, rebase failed:\n{out}\n{pout}"
-            sha = (await _git(cwd, "rev-parse", "HEAD"))[1].strip()
-            rc, out = await _git(cwd, "push")
-        return f"commit {sha}\npush {'ok' if rc == 0 else 'FAILED'}:\n{out}"
+            return f"commit {sha} on {branch}\npush FAILED:\n{out}"
+        token = await asyncio.to_thread(installation_token)
+        try:
+            base = (await asyncio.to_thread(gh_api, "GET", f"/repos/{repo}", token))["default_branch"]
+        except RuntimeError as e:
+            return f"commit {sha}, pushed {branch}, looking up the default branch failed (clone stays on {branch}): {e}"
+        try:
+            title = message.strip().splitlines()[0][:200]
+            body = ("Opened by krt-mcp from the k3s cluster (project_publish).\n\nChanged files:\n"
+                    + "\n".join(f"- `{f}`" for f in files[:100]) + ("\n- ..." if len(files) > 100 else ""))
+            pr = (await asyncio.to_thread(gh_api, "POST", f"/repos/{repo}/pulls", token,
+                                          {"title": title, "head": branch, "base": base, "body": body}))["html_url"]
+        except RuntimeError as e:
+            pr = f"commit {sha}, pushed {branch}, opening the PR failed: {e}"
+        # the branch is pushed (it stays on the remote): leave the clone on the default branch, ready for pull / next publish
+        rc, out = await _git(cwd, "checkout", base)
+        return pr if rc == 0 else f"{pr}\ncheckout {base} failed (clone stays on {branch}):\n{out}"
     return await _locked_git(project, go)
 
 
@@ -342,9 +531,28 @@ class BearerAuth:
 
     def __init__(self, app, token):
         self.app, self.token = app, token.encode()
+        self.bg = None
+
+    async def _git_token(self, receive):
+        body = b""
+        while True:
+            m = await receive()
+            body += m.get("body", b"")
+            if not m.get("more_body") or len(body) > 8192:
+                break
+        if not GIT_ON:
+            return 503, b"git features are off\n"
+        try:
+            status, text = credential_answer(body[:8192].decode("utf-8", "replace"), await asyncio.to_thread(installation_token))
+        except Exception as e:
+            print(f"git-token error: {e}", file=sys.stderr, flush=True)
+            return 502, b"token mint failed\n"
+        return status, text.encode()
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "lifespan":
+            if GIT_ON and self.bg is None:
+                self.bg = asyncio.create_task(pickup_loop())
             return await self.app(scope, receive, send)
         if scope["type"] != "http":  # no websockets: the MCP app only speaks HTTP
             return
@@ -352,9 +560,12 @@ class BearerAuth:
             status, body = 200, b"ok"
         else:
             got = dict(scope["headers"]).get(b"authorization", b"")
-            if hmac.compare_digest(got, b"Bearer " + self.token):
+            if not hmac.compare_digest(got, b"Bearer " + self.token):
+                status, body = 401, b"unauthorized"
+            elif scope["path"] == "/git-token":  # for the desktop's git credential helper
+                status, body = await self._git_token(receive) if scope["method"] == "POST" else (405, b"POST only")
+            else:
                 return await self.app(scope, receive, send)
-            status, body = 401, b"unauthorized"
         await send({"type": "http.response.start", "status": status,
                     "headers": [(b"content-type", b"text/plain"), (b"content-length", str(len(body)).encode())]
                     + ([(b"www-authenticate", b"Bearer")] if status == 401 else [])})
@@ -384,6 +595,37 @@ def selftest():
             except ValueError:
                 good = False
             assert good == ok, f"guard({path}) expected {'allow' if ok else 'reject'}"
+    assert slug("Route: GND / 5V!!") == "route-gnd-5v" and slug("!!!") == "change" and len(slug("a" * 99)) == 40
+    assert branch_name("Fix  the board\nmore", datetime(2026, 11, 24, 9, 5, tzinfo=timezone.utc)) == "cluster/20261124-0905-fix-the-board"
+    assert check_env({"FANOUT_ESCAPE": "1", "KRT_SEED": "a.b,c:/d=+-"}) == {"FANOUT_ESCAPE": "1", "KRT_SEED": "a.b,c:/d=+-"}
+    for bad in ({"PATH": "x"}, {"KRT_SEED": "a b"}, {"KRT_SEED": "$(x)"}, {"KRT_SEED": "x" * 201}, {"LD_PRELOAD": "x"}):
+        try:
+            check_env(bad)
+        except ValueError:
+            continue
+        raise AssertionError(f"check_env accepted {bad}")
+    assert credential_answer("protocol=https\nhost=github.com\n", "T") == (200, "username=x-access-token\npassword=T\n")
+    assert credential_answer("host=evil.com\n", "T")[0] == 403 and credential_answer("", "T")[0] == 403
+    assert credential_answer("protocol=http\nhost=github.com\n", "T")[0] == 403
+    with tempfile.TemporaryDirectory() as k:
+        key = Path(k) / "k.pem"
+        subprocess.run(["openssl", "genrsa", "-out", str(key), "2048"], check=True, capture_output=True)
+        pub = Path(k) / "k.pub"
+        subprocess.run(["openssl", "rsa", "-in", str(key), "-pubout", "-out", str(pub)], check=True, capture_output=True)
+        h, p, sg = make_jwt(123, key, 1000000).split(".")
+        assert json.loads(base64.urlsafe_b64decode(p + "==")) == {"iat": 999940, "exp": 1000540, "iss": "123"}
+        (Path(k) / "sig").write_bytes(base64.urlsafe_b64decode(sg + "=" * (-len(sg) % 4)))
+        r = subprocess.run(["openssl", "dgst", "-sha256", "-verify", str(pub), "-signature", str(Path(k) / "sig")],
+                           input=f"{h}.{p}".encode(), capture_output=True)
+        assert r.returncode == 0, "JWT signature does not verify"
+    with tempfile.TemporaryDirectory() as k:  # publish's branch dance: commit on cluster/..., then back on the default branch
+        async def dance():
+            d = Path(k)
+            for a in (("init", "-q", "-b", "main"), ("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "i"),
+                      ("checkout", "-q", "-b", branch_name("x")), ("checkout", "main")):
+                assert (await _git(d, *a))[0] == 0, a
+            return (await _git(d, "branch", "--show-current"))[1].strip()
+        assert asyncio.run(dance()) == "main"
     tools, happy = list_tools(), list_tools("happy")
     assert tools, "krt registry returned no tools"
     assert happy, "happy registry returned no tools"
