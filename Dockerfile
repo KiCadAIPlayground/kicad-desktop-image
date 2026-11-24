@@ -39,7 +39,9 @@ RUN apk add --no-cache nodejs npm \
  && printf 'export DISABLE_AUTOUPDATER=1\n' > /etc/profile.d/claude.sh
 ENV DISABLE_AUTOUPDATER=1
 COPY claude-me /usr/local/bin/claude-me
-RUN chmod 755 /usr/local/bin/claude-me && claude --version && claude --help | grep -e --plugin-dir && claude --help | grep -e --add-dir \
+COPY claude-wrapper /usr/local/sbin/claude
+RUN chmod 755 /usr/local/bin/claude-me /usr/local/sbin/claude && [ "$(command -v claude)" = /usr/local/sbin/claude ] \
+ && CLAUDE_CONFIG_DIR=/tmp claude --version && { HOME=/nonexistent claude --version >/dev/null 2>&1; [ $? = 1 ]; } && /usr/local/bin/claude --version && /usr/local/bin/claude --help | grep -e --plugin-dir && /usr/local/bin/claude --help | grep -e --add-dir \
  && claude-me --help && { claude-me </dev/null >/dev/null 2>&1; [ $? = 2 ]; }
 # smoke test: the router extension and kikit load in KiCad's Python
 RUN cd /opt/kicad-plugins/KiCadRoutingTools/rust_router && python3 -c "import grid_router; print('grid_router ok')" && python3 -c "import kikit; print('kikit ok')"

@@ -1,0 +1,16 @@
+#!/bin/sh
+# /usr/local/sbin/claude (ahead of the real /usr/local/bin/claude on PATH): on the shared desktop, Claude Code never
+# runs on a shared default login. With CLAUDE_CONFIG_DIR set (claude-me) it passes straight through; without it
+# (e.g. the AI buttons of the KiCadRoutingTools plugin, run by the shared KiCad process) it uses the profile of the
+# active driver, the person who last ran `claude-me <name>`.
+real=/usr/local/bin/claude
+if [ -z "$CLAUDE_CONFIG_DIR" ]; then
+  name=$(cat /config/claude/.active 2>/dev/null)
+  if [ -z "$name" ] || [ ! -d "/config/claude/$name" ]; then
+    echo "claude: no active Claude profile on this desktop. Run 'claude-me <your-name>' first (own login per person)." >&2
+    exit 1
+  fi
+  export CLAUDE_CONFIG_DIR="/config/claude/$name"
+  [ -t 2 ] && echo "claude: using $name's profile (active driver; 'claude-me <name>' to switch)" >&2
+fi
+exec "$real" "$@"

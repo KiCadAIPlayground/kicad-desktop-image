@@ -30,3 +30,10 @@ KiKit 1.8.1 (backend for the KiKit PCM plugin) is pip-installed into the system 
 ## Claude Code on the shared desktop
 
 Claude Code (pinned, npm `stable` tag, auto-updater off) is installed in the image. Each person starts it with `claude-me <name>` in a desktop terminal: that sets `CLAUDE_CONFIG_DIR=/config/claude/<name>` (mode 700, created on first use), starts in `/config/projects` and runs `claude --plugin-dir /opt/kicad-happy --add-dir <KiCadRoutingTools>` (kicad-happy skills as a plugin, the routing skills from its `.claude/skills`) with the remaining args, so everyone logs in with their own Anthropic account and no subscription is shared. `claude-me` without a name lists the existing profiles and asks for one on a terminal (a desktop icon can run `foot -e /usr/local/bin/claude-me`); names are `[a-z0-9-]{1,32}`.
+
+## Claude login on the shared desktop (active driver)
+`claude-me <name>` runs Claude Code on that person's own profile (`/config/claude/<name>`) and makes them the
+**active driver** (`/config/claude/.active`). `/usr/local/sbin/claude` (ahead of the real CLI on `PATH`) is a wrapper:
+with `CLAUDE_CONFIG_DIR` set it passes through; without (the KiCadRoutingTools AI buttons, run by the shared KiCad
+process) it uses the active driver's profile, and with no driver it refuses. There is never a shared default login.
+Whoever ran `claude-me` last pays for AI runs started from KiCad.
