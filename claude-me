@@ -4,7 +4,7 @@ base=/config/claude
 usage() {
   echo "usage: claude-me <name> [claude args...]   (name: [a-z0-9-]{1,32}; profile in $base/<name>)"
   echo "existing profiles:"
-  ls "$base" 2>/dev/null | sed 's/^/  /'
+  ls "$base" 2>/dev/null | grep -v "^\.active$" | sed 's/^/  /'
 }
 case "$1" in -h | --help) usage; exit 0 ;; esac
 if [ -z "$1" ]; then
@@ -26,6 +26,9 @@ if ! printf '%s' "$name" | grep -qE '^[a-z0-9-]{1,32}$'; then
 fi
 mkdir -p "$base/$name" && chmod 700 "$base/$name" || exit 1
 export CLAUDE_CONFIG_DIR="$base/$name"
+# you become the active driver: the shared KiCad's AI buttons (KiCadRoutingTools) now run on your login
+printf '%s\n' "$name" > "$base/.active" && chmod 600 "$base/.active"
+echo "claude-me: AI buttons in the shared KiCad now use $name's login (whoever runs claude-me last takes over)" >&2
 cd /config/projects 2>/dev/null || true
 # kicad-happy is a plugin (skills + manifest); KiCadRoutingTools keeps its skills in .claude/skills, which
 # --add-dir loads (it has no plugin manifest, so --plugin-dir does not apply to it)
