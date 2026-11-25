@@ -17,7 +17,8 @@ jobs:
       - name: Open PR for newer base tag
         run: |
           python3 scripts/latest_base_tag.py --selftest
-          read -r new old < <(python3 scripts/latest_base_tag.py)
+          out=$(python3 scripts/latest_base_tag.py)  # not process substitution: a failure there would be swallowed
+          read -r new old <<< "$out"
           echo "newest=$new pinned=$old"
           [ "$new" != "$old" ] || { echo "up to date"; exit 0; }
           # the script only returns the max, so guard against a pin that is already newer
